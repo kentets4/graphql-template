@@ -50,7 +50,7 @@ const startApolloServer = async (typeDefs, resolvers, prisma: PrismaClient) => {
 	server.applyMiddleware({ app });
 
 	await new Promise<void>((resolve) =>
-		httpServer.listen({ port: 4000 }, resolve)
+		httpServer.listen({ port: 4000, path: '/graphql' }, resolve)
 	);
 
 	console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`);
