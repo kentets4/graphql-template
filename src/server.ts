@@ -27,6 +27,7 @@ const redis = new Redis({
 
 const startApolloServer = async (typeDefs, resolvers, prisma: PrismaClient) => {
 	const app = express();
+	app.use(graphqlUploadExpress());
 
 	const httpServer = http.createServer(app);
 
@@ -42,8 +43,6 @@ const startApolloServer = async (typeDefs, resolvers, prisma: PrismaClient) => {
 			ApolloServerPluginLandingPageGraphQLPlayground(),
 		],
 	});
-
-	app.use(graphqlUploadExpress);
 
 	await server.start();
 
