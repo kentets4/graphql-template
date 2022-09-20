@@ -10,7 +10,21 @@
      "strictNullChecks": false,
      "skipLibCheck": true
    },
-   "include": ["src"],
+   "ts-node": {
+      "transpileOnly": true,
+      "files": true,
+      "compilerOptions": {
+        "module": "commonjs",
+        "esModuleInterop": true,
+        "target": "es6",
+        "noImplicitAny": false,
+        "moduleResolution": "node",
+        "sourceMap": true,
+        "outDir": "dist",
+        "strictNullChecks": false,
+        "skipLibCheck": true
+      },
+   },
+   "include": ["src", "app.ts"],
    "exclude": ["node_modules", "dist"]
  }
- 
