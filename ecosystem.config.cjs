@@ -5,7 +5,7 @@ module.exports = {
 			script: "./dist/app.js",
 			node_args : '--experimental-specifier-resolution=node',
 			env: {
-				// NODE_ENV: 'production'
+				NODE_ENV: 'production'
 			},
 		},
 	],
