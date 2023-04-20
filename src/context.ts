@@ -1,30 +1,24 @@
-import { PrismaClient } from "@prisma/client";
+import { ContextFunction } from "@apollo/server";
+import { ExpressContextFunctionArgument } from "@apollo/server/dist/esm/express4";
 import { checkRole } from "./utils/auth";
+import { PrismaClient } from "@prisma/client";
+import jwt from "jsonwebtoken";
+
+export interface Context {
+	authorization?: string;
+	prisma: PrismaClient;
+}
 
 const prisma = new PrismaClient();
 
-export interface Context {
-	prisma: PrismaClient;
-   checkToken: () => Object
-}
-
-export function createContext({ req }): Context {
+export const context: ContextFunction<
+	[ExpressContextFunctionArgument],
+	Context
+> = async ({ req }) => {
 	const { authorization } = req.headers;
 
-	const checkToken = async () => {
-		const roles = ["USER", "ADMIN"];
-		const checks = await Promise.all(
-			roles.map(async (role) => {
-				return await checkRole(authorization, role, prisma, false);
-			})
-		);
-		const find = checks.find((object) => object);
-		if (!find) throw new Error("Token timeout");
-		return find;
-	};
-
 	return {
+		authorization,
 		prisma,
-		checkToken,
 	};
-}
+};

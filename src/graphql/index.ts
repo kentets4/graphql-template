@@ -1,24 +1,39 @@
-import { mergeResolvers, mergeTypeDefs } from "@graphql-tools/merge"
-import { makeExecutableSchema } from "@graphql-tools/schema"
-import { sdlInputs } from "@paljs/plugins"
-import resolversArray from "../entity/resolvers"
-import typeDefsArray from "../entity/typeDefs"
-import generatedResolvers from '../generated/resolvers'
-import generatedTypeDefs from '../generated/typeDefs'
-import GraphQLUpload from 'graphql-upload/GraphQLUpload.js'
+import { mergeResolvers, mergeTypeDefs } from "@graphql-tools/merge";
+import { makeExecutableSchema } from "@graphql-tools/schema";
+import resolversArray from "../entity/resolvers";
+import typeDefsArray from "../entity/typeDefs";
+import { getUserJWT } from "../utils/auth";
+import { authDirective } from "./authDirective";
+
+import generatedResolvers from "./../generated/resolvers";
+import generatedTypeDefs from "./../generated/typeDefs";
 
 const GraphQLSetup = () => {
-	const typeDefs = mergeTypeDefs([sdlInputs(), ...typeDefsArray, generatedTypeDefs])
+	const { authDirectiveTransformer, authDirectiveTypeDefs } = authDirective(
+		"auth",
+		getUserJWT,
+	);
 
-	const resolvers = mergeResolvers([...resolversArray, ...generatedResolvers, {Upload: GraphQLUpload}])
+	const typeDefs = mergeTypeDefs([
+		...typeDefsArray,
+		authDirectiveTypeDefs,
+		generatedTypeDefs,
+	]);
 
-	const schema = makeExecutableSchema({ typeDefs, resolvers })
+	const resolvers = mergeResolvers([
+		...resolversArray,
+		...generatedResolvers
+	]);
+
+	const schema = authDirectiveTransformer(
+		makeExecutableSchema({ typeDefs, resolvers }),
+	);
 
 	return {
 		typeDefs,
 		resolvers,
-		schema
-	}
-}
+		schema,
+	};
+};
 
-export default GraphQLSetup() 
+export default GraphQLSetup();

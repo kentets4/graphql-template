@@ -1,6 +1,6 @@
 import { PrismaSelect } from "@paljs/plugins"
-import { Context } from "apollo-server-core";
 import { GraphQLResolveInfo } from "graphql";
+import { Context } from "../context";
 
 const PrismaSelectMiddleware = async (
 	resolve,

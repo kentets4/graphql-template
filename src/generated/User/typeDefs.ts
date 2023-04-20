@@ -3,21 +3,15 @@ import gql from 'graphql-tag'
 export default gql`
   type User {
     id: String!
-    email: String!
-    name: String
-    posts(
-      where: PostWhereInput
-      orderBy: PostOrderByWithRelationInput
-      cursor: PostWhereUniqueInput
-      take: Int
-      skip: Int
-      distinct: PostScalarFieldEnum
-    ): [Post!]!
-    _count: UserCountOutputType!
+    role: String!
+    login: String!
+    name: String!
+    surname: String!
+    blocked: Boolean!
   }
 
   type Query {
-    findUniqueUser(where: UserWhereUniqueInput!): User
+    findUniqueUser(where: UserWhereUniqueInput!): User @auth(requires: ADMIN)
     findFirstUser(
       where: UserWhereInput
       orderBy: [UserOrderByWithRelationInput]
@@ -25,7 +19,7 @@ export default gql`
       take: Int
       skip: Int
       distinct: [UserScalarFieldEnum]
-    ): User
+    ): User @auth(requires: ADMIN)
     findManyUser(
       where: UserWhereInput
       orderBy: [UserOrderByWithRelationInput]
@@ -33,7 +27,7 @@ export default gql`
       take: Int
       skip: Int
       distinct: [UserScalarFieldEnum]
-    ): [User!]
+    ): [User!] @auth(requires: ADMIN)
     findManyUserCount(
       where: UserWhereInput
       orderBy: [UserOrderByWithRelationInput]
@@ -41,29 +35,29 @@ export default gql`
       take: Int
       skip: Int
       distinct: [UserScalarFieldEnum]
-    ): Int!
+    ): Int! @auth(requires: ADMIN)
     aggregateUser(
       where: UserWhereInput
       orderBy: [UserOrderByWithRelationInput]
       cursor: UserWhereUniqueInput
       take: Int
       skip: Int
-    ): AggregateUser
+    ): AggregateUser @auth(requires: ADMIN)
   }
 
   type Mutation {
-    createOneUser(data: UserCreateInput!): User!
-    updateOneUser(data: UserUpdateInput!, where: UserWhereUniqueInput!): User!
-    deleteOneUser(where: UserWhereUniqueInput!): User
+    createOneUser(data: UserCreateInput!): User! @auth(requires: ADMIN)
+    updateOneUser(data: UserUpdateInput!, where: UserWhereUniqueInput!): User! @auth(requires: ADMIN)
+    deleteOneUser(where: UserWhereUniqueInput!): User @auth(requires: ADMIN)
     upsertOneUser(
       where: UserWhereUniqueInput!
       create: UserCreateInput!
       update: UserUpdateInput!
-    ): User
-    deleteManyUser(where: UserWhereInput): BatchPayload
+    ): User @auth(requires: ADMIN)
+    deleteManyUser(where: UserWhereInput): BatchPayload @auth(requires: ADMIN)
     updateManyUser(
       data: UserUpdateManyMutationInput!
       where: UserWhereInput
-    ): BatchPayload
+    ): BatchPayload @auth(requires: ADMIN)
   }
 `

@@ -1,4 +1,4 @@
-import { Generator } from "@paljs/generator"
+import { Generator } from "@paljs/generator";
 
 new Generator(
 	{ name: "sdl", schemaPath: "./prisma/schema.prisma" },
@@ -11,4 +11,4 @@ new Generator(
 		// 	Post: ["findUnique"]
 		// }
 	}
-).run()
+).run();

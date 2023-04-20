@@ -1,13 +1,11 @@
-import { mergeTypeDefs } from "@graphql-tools/merge";
 import User from "./User/typeDefs";
-import generated from '../generated/typeDefs'
-import { gql } from "apollo-server-core";
 
-const Initial = gql`
+const Initial = `#graphql
    scalar DateTime
    scalar Upload
-`
+   scalar Json
+`;
 
-const typeDefsArray = [User, generated, Initial];
+const typeDefsArray = [User, Initial];
 
 export default typeDefsArray;

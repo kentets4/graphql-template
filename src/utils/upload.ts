@@ -3,7 +3,7 @@ const shortid = require('shortid');
 
 const uploadsDir = `${__dirname}/../../public`;
 
-const storeUpload = async ({ stream, filename }, s3) => {
+const storeUpload: ({stream, filename }) => any = async ({ stream, filename }) => {
     const randomName = await shortid.generate();
     const extension = filename.split('.').pop();
     const fileName = `${randomName}.${extension}`;
@@ -17,11 +17,11 @@ const storeUpload = async ({ stream, filename }, s3) => {
     );
 };
 
-const processUpload = async (upload, s3) => {
+const processUpload = async (upload) => {
     try {
         const { createReadStream, filename } = await upload;
         let stream = createReadStream()
-        const { name } = await storeUpload({ stream, filename }, s3);
+        const { name } = await storeUpload({ stream, filename });
         return name;
     } catch (err) {
         throw new Error(err);

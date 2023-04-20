@@ -1,6 +1,5 @@
-import generated from '../generated/resolvers'
 import User from "./User/resolvers";
 
-const resolvers = [User,...generated];
+const resolvers = [User];
 
-export default resolvers
+export default resolvers;

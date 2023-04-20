@@ -1,58 +1,97 @@
-import { ApolloServer } from "apollo-server-express";
-import {
-	ApolloServerPluginDrainHttpServer,
-	ApolloServerPluginLandingPageGraphQLPlayground,
-} from "apollo-server-core";
-const { BaseRedisCache } = require("apollo-server-cache-redis");
-import { applyMiddleware } from "graphql-middleware";
+import { ApolloServer } from "@apollo/server";
+import { expressMiddleware } from "@apollo/server/express4";
+import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHttpServer";
 import express from "express";
 import http from "http";
+import cors from "cors";
+import bodyparser from "body-parser";
 import GraphQLSetup from "./graphql";
-import { PrismaClient } from "@prisma/client";
-import { createContext, Context } from "./context";
-import { GraphQLResolveInfo } from "graphql";
-import { PrismaSelect } from "@paljs/plugins";
-
-import graphqlUploadExpress from "graphql-upload/graphqlUploadExpress.js";
+import { Context, context } from "./context";
+import { applyMiddleware } from "graphql-middleware";
 import PrismaSelectMiddleware from "./utils/prismaSelect";
+import { KeyvAdapter } from "@apollo/utils.keyvadapter";
+import chalk from "chalk";
+import Keyv from "keyv";
+import ioredis from "ioredis";
 
-const Redis = require("ioredis");
+const { json } = bodyparser;
 
-const redis = new Redis({
-	port: 6379,
-	host: "127.0.0.1",
-});
+const PORT = process.env["PORT"] || 4000;
 
+const checkEnv = (envs: string[]) => {
+	let error = false;
+	envs.forEach((env) => {
+		if (!process.env[env]) {
+			console.log(chalk.redBright(`[${env}] environment is missing`));
+			error = true;
+		}
+	});
+	return error;
+};
 
+let cache;
 
-const startApolloServer = async (typeDefs, resolvers, prisma: PrismaClient) => {
+export const startServer = () => {
+	let redis = new ioredis(6379);
+
+	redis.on("error", async (err) => {
+		if (process.env["NODE_ENV"] === "PROD") {
+			throw err;
+		}
+
+		await redis.disconnect();
+		console.log(chalk.red("Redis is disabled"));
+		runServer(false);
+	});
+
+	redis.on("connect", async () => {
+		console.log(chalk.green("Redis is enabled"));
+		await redis.disconnect();
+		runServer(true);
+	});
+};
+
+const runServer = async (doCache) => {
+	let needStop = false;
+
+	if (checkEnv(["DATABASE_URL", "USER_SECRET"])) needStop = true;
+
+	if (needStop) {
+		console.log(chalk.bold.yellow("Server is shutting down"));
+		return;
+	}
+
+	if (doCache) {
+		cache = new KeyvAdapter(new Keyv("redis://localhost:6379"));
+	}
+
 	const app = express();
-	app.use(graphqlUploadExpress());
 
 	const httpServer = http.createServer(app);
 
-	const server = new ApolloServer({
+	const server = new ApolloServer<Context>({
 		schema: applyMiddleware(GraphQLSetup.schema, PrismaSelectMiddleware),
-		context: createContext,
-		csrfPrevention: true,
-		cache: new BaseRedisCache({
-			client: redis,
-		}),
-		plugins: [
-			ApolloServerPluginDrainHttpServer({ httpServer }),
-			ApolloServerPluginLandingPageGraphQLPlayground(),
-		],
+		plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
 	});
 
 	await server.start();
 
-	server.applyMiddleware({ app });
-
-	await new Promise<void>((resolve) =>
-		httpServer.listen({ port: 4000, path: '/graphql' }, resolve)
+	app.use(
+		"/graphql",
+		cors<cors.CorsRequest>(),
+		json(),
+		expressMiddleware(server, {
+			context,
+		}),
 	);
 
-	console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`);
+	await new Promise<void>((resolve) =>
+		httpServer.listen({ port: PORT }, resolve),
+	);
+	console.log(
+		chalk.green(
+			`🚀 Server ready at ` +
+				chalk.white.bold(`http://localhost:${PORT}/graphql`),
+		),
+	);
 };
-
-export default startApolloServer;
